@@ -5,17 +5,18 @@
 
 'use strict';
 
-module.exports = function(grunt) {
+// module.exports = function(grunt) {
 
-  var fs = require('fs')
-    , xrate = this
+//   var fs = require('fs')
+//     , xrate = this
 
-  this.base = '/sys/class/net'
-  this.device = 'eth0'
-  this.sent = 'statistics/rx_bytes'
-  this.rcvd = 'statistics/tx_bytes'
-}	
+//   this.base = '/sys/class/net'
+//   this.device = 'eth0'
+//   this.sent = 'statistics/rx_bytes'
+//   this.rcvd = 'statistics/tx_bytes'
+// }	
 
-		
+
+module.exports = require('./src/cli');		
 
 

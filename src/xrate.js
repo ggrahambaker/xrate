@@ -20,3 +20,8 @@ var config = {
 }
 
 
+exports.hello = function() {
+	console.log('awake!')
+	console.log('\n')
+	console.log('done!')
+} 
