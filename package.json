@@ -1,0 +1,41 @@
+{
+  "name": "xrate",
+  "version": "0.0.1",
+  "description": "Calculate a NIC's current transfer rate",
+  "main": "index.js",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devaos/xrate.git"
+  },
+  "keywords": [
+    "bandwidth",
+    "nic",
+    "network",
+    "link",
+    "ifconfig",
+    "tx",
+    "rx",
+    "transfer",
+    "rate"
+  ],
+  "author": "Ari Aosved",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/devaos/xrate/issues"
+  },
+  "dependencies": {
+    "async": "^0.9.0",
+    "portscanner": "^1.0.0"
+  },
+  "devDependencies": {
+    "grunt": "*",
+    "grunt-contrib-clean": "*",
+    "grunt-contrib-jshint": "*",
+    "grunt-contrib-nodeunit": "*",
+    "grunt-release": "*",
+    "matchdep": "*"
+  }
+}
