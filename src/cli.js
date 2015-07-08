@@ -11,5 +11,17 @@
 var xrate = require('./xrate')
 
 
-console.log('in cli!')
-xrate.hello()
+xrate.start(function(result){
+	
+	console.log('returnedd')
+	console.log(result)
+
+	
+})
+
+
+setTimeout(function(){
+	xrate.stop(function(msg){
+		console.log(msg)
+	})
+}, 66000)
