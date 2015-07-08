@@ -1,4 +1,4 @@
-#xrate API
+#XRate API
 An api for monitoring incoming and outgoing bandwidth usage for Linux servers. The module will report the number of bytes sent and received from the previous last second, the average from the previous minute (by second), as well as the total number of bytes. 
 
 

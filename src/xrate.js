@@ -137,6 +137,7 @@ var reader = function(callback){
 		var thisRecord = []
 
 		for (var i = 0; i < results.length; i++) {
+			if(config)
 			thisRecord[i] = results[i].toString().split(os.EOL)[0]
 		}
 		
