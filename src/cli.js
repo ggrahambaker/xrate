@@ -30,7 +30,8 @@ xrate.on('update', function(info){
 
 // kill it
 setTimeout(function(){
-	xrate.stop(function(msg){
-		console.log(msg)
+	xrate.stop(function(stats){
+		console.log(stats.o.total + " :o")
+		console.log(stats.i.total + " :i")
 	})
-}, 66000)
+}, 10000)

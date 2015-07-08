@@ -60,11 +60,11 @@ Xrate will emit updates if the client wants information about the bandwidth imme
 
 
 ###stop 
-Stops reading and then stops writing to the log. 
+Stops reading and then stops writing to the log. Returns total number of outgoing and incoming bytes.
 
-    xrate.stop(function (err) {
-	    if(err) // something went wrong
-	    console.log('all done recording') 
+    xrate.stop(function (stats) {
+	    console.log(stats.i.total)
+	    console.log(stats.o.total)
     })
 
 

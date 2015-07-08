@@ -60,15 +60,24 @@ var async = require('async')
 		}
 	}
 	, self
+	, history = {
+		i : {
+			total : 0
+		}, 
+		o : {
+			total : 0
+		}
+	}
 
 // give xrate emitting capabilities
 util.inherits(XRate, emitter)
 // pass this off somewhere!
 module.exports = XRate
 
+
+
 /*
 * constructor with optional settings, if none are specified, it uses default settings
-* 
 */
 function XRate(settings){
 	if(settings){
@@ -81,25 +90,31 @@ function XRate(settings){
 
 
 XRate.prototype.start = function(){
-	
+
 	job = setInterval(function(){
+	
 		reader(function(){
 			// issue event!
 			if(config.update)
 				self.emit('update', lastReport)		
 		})	
-		
+	
 	}, config.frequency)
 }
 
-
+/*
+* makes xrate stop reporting
+*/
 XRate.prototype.stop = function(callback){
 	clearInterval(job)
-	callback('died')
+	
+	callback(history)
 }
 
 
-
+/*
+* reports the most recent ~lastReport~
+*/
 XRate.prototype.status = function(callback){
 	callback(lastReport)
 }
@@ -135,7 +150,6 @@ var reader = function(callback){
 /*
 * helper to reader to slot pieces into place 
 */
-
 var update = function(log, callback){
 	// this means this is our first time through
 	if(lastReport.o.total === 0){
@@ -145,13 +159,17 @@ var update = function(log, callback){
 
 		lastReport.o.first = log[0] - lastReport.o.total 
 		lastReport.i.first = log[1] - lastReport.i.total 
+		// pass this to history, 
+		// console.log(history.o.total + " : history")
+		// console.log(lastReport.o.first + " : lastReport")
+		history.o.total += lastReport.o.first 
+		history.i.total += lastReport.i.first 
+
 		
 		lastReport.o.total = log[0]
 		lastReport.i.total = log[1]
+		
 		// calc average
-		// console.log('temp log length : ' + tempLog.length)
-
-		// console.log('temp log index, about to be ++ : ' + second_index % seconds)
 		tempLog[second_index++ % seconds] = [lastReport.o.first, lastReport.i.first]
 
 		avg(function(){
