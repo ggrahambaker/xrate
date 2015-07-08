@@ -72,7 +72,7 @@ gets most recent entry in the log
 
 ##Starting XRate
 
-node index.js
+	$ node index.js
 
 
 
