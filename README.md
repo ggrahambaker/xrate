@@ -10,6 +10,13 @@ An api for monitoring incoming and outgoing bandwidth usage for Linux servers. T
 	 - stop
 	 - status
 
+
+##Starting XRate
+
+	$ npm install
+ 	$ node index.js
+
+
 ##Usage 
 
 
@@ -70,9 +77,7 @@ gets most recent entry in the log
     })
 
 
-##Starting XRate
 
-	$ node index.js
 
 
 
