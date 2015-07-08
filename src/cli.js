@@ -8,18 +8,27 @@
  */
 
 
-var xrate = require('./xrate')
+var XRate = require('./xrate')
 
 
-xrate.start(function(result){
-	
-	console.log('returnedd')
-	console.log(result)
+// pass in config file
+var config = {
+		frequency : 1000, 
+		units : 'bytes', 
+		update: false  
+	} 
 
-	
+var xrate = new XRate(config)
+
+xrate.start()
+
+xrate.on('update', function(info){
+	// log arbitrary information
+	console.log(info.o.first)
+	console.log(info.i.first)
 })
 
-
+// kill it
 setTimeout(function(){
 	xrate.stop(function(msg){
 		console.log(msg)

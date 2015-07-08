@@ -14,6 +14,7 @@ var async = require('async')
 	, path = require('path')
 	, buffer = require('buffer')
 	, os = require('os')
+	, util = require('util')
 	, emitter = require('events').EventEmitter
 // ===================================
 
@@ -32,7 +33,7 @@ var async = require('async')
 	, config = {
 		frequency : 1000, 
 		units : 'bytes', 
-		update: false  
+		update: true  
 	} 
 	, logger = new (winston.Logger)({
 	    transports: [
@@ -58,37 +59,64 @@ var async = require('async')
 			average : 0
 		}
 	}
+	, self
 
-exports.start = function(callback){
-	
-	job = setInterval(function(){
-		reader()	
-		// issue event!	
-	}, config.frequency)
-	
-	
-	logger.info('Up and running!')
-	callback('toRet')
+// give xrate emitting capabilities
+util.inherits(XRate, emitter)
+// pass this off somewhere!
+module.exports = XRate
+
+/*
+* constructor with optional settings, if none are specified, it uses default settings
+* 
+*/
+function XRate(settings){
+	if(settings){
+		config = settings
+	}
+
+	emitter.call(this)	
+	self = this
 }
 
 
-exports.stop = function(callback){
+XRate.prototype.start = function(){
+	
+	job = setInterval(function(){
+		reader(function(){
+			// issue event!
+			if(config.update)
+				self.emit('update', lastReport)		
+		})	
+		
+	}, config.frequency)
+}
 
+
+XRate.prototype.stop = function(callback){
 	clearInterval(job)
 	callback('died')
 }
 
-exports.status = function(callback){
 
+
+XRate.prototype.status = function(callback){
 	callback(lastReport)
 }
 
 
-var reader = function(){
+/*
+* reads incoming and outgoing bandwidth information and then processes it 
+* into ~lastReport~ which gives information about bandwidth usage in the last
+* second. 
+*/
+var reader = function(callback){
 	var syspath = path.normalize(settings.base + '/' + settings.device + '/')
+
+	// read the info
 	async.map([syspath + settings.sent, syspath + settings.rcvd], fs.readFile, function(err, results){
 		if(err) {
-			logger.info('failed to read file')
+			this.emit('error', 'error reading file')
 		}
 
 		var thisRecord = []
@@ -98,10 +126,15 @@ var reader = function(){
 		}
 		
 		update(thisRecord, function(){
-			logger.info(lastReport)
+			//logger.info(lastReport)
+			callback()
 		})
 	})
 }
+
+/*
+* helper to reader to slot pieces into place 
+*/
 
 var update = function(log, callback){
 	// this means this is our first time through
@@ -127,6 +160,9 @@ var update = function(log, callback){
 	}	
 }
 
+/*
+* helper for update to break things up a little
+*/
 var avg = function(callback){
 	var o = 0
 	, i = 0
@@ -135,12 +171,13 @@ var avg = function(callback){
 		o += tempLog[j][0]
 		i += tempLog[j][1]
 	}
-	
-
 
 	lastReport.o.average = o / tempLog.length
 	lastReport.i.average = i / tempLog.length
 	callback()
 }
+
+
+
 
 
