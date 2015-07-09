@@ -1,6 +1,10 @@
 /**
- * Copyright (c) 2015 Ari Aosved
- * http://github.com/devaos/xrate/blob/master/LICENSE
+ * @license XRate
+ * Copyright (c) 2014 Accretive Technology Group, Inc.  http://accretivetg.com
+ * MIT Licensed  https://github.com/accretive/xrate/blob/master/LICENSE
+ *
+ * @file index.js
+ *
  */
 
 'use strict';
@@ -14,9 +18,5 @@
 //   this.device = 'eth0'
 //   this.sent = 'statistics/rx_bytes'
 //   this.rcvd = 'statistics/tx_bytes'
-// }	
-
-
-module.exports = require('./src/cli');		
-
-
+// }
+module.exports = require('./src/cli');

@@ -4,11 +4,12 @@
   "description": "Calculate a NIC's current transfer rate",
   "main": "index.js",
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "install": "cp node_modules/atg-js-styleguide/git-script.sh .git/hooks/pre-commit"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/devaos/xrate.git"
+    "url": "https://github.com/accretive/xrate.git"
   },
   "keywords": [
     "bandwidth",
@@ -24,7 +25,7 @@
   "author": "Ari Aosved",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/devaos/xrate/issues"
+    "url": "https://github.com/accretive/xrate/issues"
   },
   "dependencies": {
     "async": "^0.9.0",
@@ -32,6 +33,8 @@
     "winston": "^1.0.1"
   },
   "devDependencies": {
+    "atg-js-styleguide": "^1.0.6",
+    "atg-service-control": "*",
     "grunt": "*",
     "grunt-contrib-clean": "*",
     "grunt-contrib-jshint": "*",

@@ -1,11 +1,10 @@
-'use strict'
+'use strict';
 
 module.exports = function(grunt) {
-
   // Load Grunt tasks declared in the package.json file
-  require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks)
-
-  //============================================================================
+  require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
+  grunt.loadNpmTasks('atg-js-styleguide');
+  // ============================================================================
 
   grunt.initConfig({
 
@@ -16,11 +15,17 @@ module.exports = function(grunt) {
         node: true,
         validthis: true,
         loopfunc: true,
-        laxcomma: true,
+        laxcomma: true
       },
       files: {
         src: ['index.js', '<%= nodeunit.tests %>']
       }
+    },
+    eslint: {
+      options: {
+        configFile: 'node_modules/atg-js-styleguide/.eslintrc'
+      },
+      target: ['Gruntfile.js', 'index.js', 'src/**/*.js', 'test/**/*.js']
     },
 
     // Before generating any new files, remove previously-created files.
@@ -48,15 +53,15 @@ module.exports = function(grunt) {
       }
     }
 
-  })
+  });
 
-  //============================================================================
+  // ============================================================================
 
   grunt.registerTask('test', [
     'clean:coverage',
     'jshint',
-    'nodeunit',
-  ])
+    'nodeunit'
+  ]);
 
-  grunt.registerTask('default', ['test'])
-}
+  grunt.registerTask('default', ['eslint', 'test']);
+};

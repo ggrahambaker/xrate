@@ -1,6 +1,6 @@
 'use strict';
 
-var xrate = require('../index')
+var xrate = require('../index');
 
 /*
   ======== A Handy Little Nodeunit Reference ========
@@ -27,16 +27,18 @@ exports.xrate = {
   ],
   setUp: function(done) {
     // setup here if necessary
-    done()
+    done();
   },
   tearDown: function(done) {
     // teardown here if necessary
-    done()
+    done();
   },
-  findPortLimitTest: function(test) {
-    var p = new portPick(grunt)
-    test.equal(65534, p.findPortLimit(1, false))
-    test.equal(1, p.findPortLimit(65534, false))
-    test.done()
+  findBandwidthInfo: function(test) {
+    xrate.start();
   }
+};
+
+exports.testSomething = function(test) {
+  test.expect(1);
+  test.ok(true, 'should pass!');
 };
