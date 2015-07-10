@@ -36,7 +36,7 @@ module.exports = function(grunt) {
 
     // Unit tests.
     nodeunit: {
-      tests: ['tests/*_test.js']
+      tests: ['test/*_test.js']
     },
 
     // Automate version bumps

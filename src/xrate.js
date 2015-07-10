@@ -13,7 +13,8 @@ var async = require('async'),
   path = require('path'),
   os = require('os'),
   util = require('util'),
-  emitter = require('events').EventEmitter;
+  emitter = require('events').EventEmitter,
+  fdSlicer = require('fd-slicer');
 // ===================================
 
 var settings = {
@@ -52,7 +53,11 @@ var settings = {
       o: {
         total: 0
       }
-  };
+  },
+  fd = [],
+  outSlice = null,
+  inSlice = null;
+
 
 // give xrate emitting capabilities
 util.inherits(XRate, emitter);
@@ -67,14 +72,13 @@ function XRate() {
   self = this;
 }
 
-
 /*
 * helper for update to break things up a little
 */
 var avg = function(callback) {
   var o = 0,
   i = 0;
-
+  tempLog[secondIndex++ % seconds] = [lastReport.o.first, lastReport.i.first];
   for (var j = 0; j < tempLog.length; j++) {
     o += tempLog[j][0];
     i += tempLog[j][1];
@@ -86,72 +90,82 @@ var avg = function(callback) {
 };
 
 /*
-* helper to reader to slot pieces into place
-*/
-var update = function(log, callback) {
-  // this means this is our first time through
-  if (lastReport.o.total === 0) {
-    lastReport.o.total = log[0];
-    lastReport.i.total = log[1];
-  } else {
-    lastReport.o.first = log[0] - lastReport.o.total;
-    lastReport.i.first = log[1] - lastReport.i.total;
-    // pass this to history,
-
-    history.o.total += lastReport.o.first;
-    history.i.total += lastReport.i.first;
-
-    lastReport.o.total = log[0];
-    lastReport.i.total = log[1];
-
-    // calc average
-    tempLog[secondIndex++ % seconds] = [lastReport.o.first, lastReport.i.first];
-    avg(function() {
-      callback();
-    });
-  }
-};
-
-/*
 * reads incoming and outgoing bandwidth information and then processes it
 * into ~lastReport~ which gives information about bandwidth usage in the last
 * second.
 */
 var reader = function(callback) {
-  var syspath = path.normalize(settings.base + '/' + settings.device + '/');
+  var oStream = outSlice.createReadStream();
+  var iStream = inSlice.createReadStream();
 
-  // read the info
-  async.map([syspath + settings.sent, syspath + settings.rcvd], fs.readFile, function(err, results) {
-    if (err) {
-      this.emit('error', 'error reading file');
+  oStream.on('readable', function() {
+    var chunk = oStream.read().toString().split(os.EOL)[0];
+    if (lastReport.o.total === 0) {
+      lastReport.o.total = chunk;
+    } else {
+      lastReport.o.first = chunk - lastReport.o.total;
+      history.o.total += lastReport.o.first;
+      lastReport.o.total = chunk;
     }
+  });
 
-    var thisRecord = [];
+  iStream.on('readable', function() {
+    var chunk = iStream.read().toString().split(os.EOL)[0];
 
-    for (var i = 0; i < results.length; i++) {
-      if (config) {
-        thisRecord[i] = results[i].toString().split(os.EOL)[0];
-      }
+    if (lastReport.i.total === 0) {
+      lastReport.i.total = chunk;
+    } else {
+      lastReport.i.first = chunk - lastReport.i.total;
+      history.i.total += lastReport.i.first;
+      lastReport.i.total = chunk;
     }
-    update(thisRecord, function() {
-      callback();
-    });
+  });
+
+  avg(function() {
+    callback();
   });
 };
 
-XRate.prototype.start = function() {
-  if (settings) {
-    config = settings;
+XRate.prototype.start = function(opConfig) {
+  if (opConfig) {
+    config = opConfig;
   }
 
-  job = setInterval(function() {
-    reader(function() {
-      // issue event!
-      if (config.update) {
-        self.emit('update', lastReport);
-      }
-    });
-  }, config.frequency);
+  var syspath = path.normalize(settings.base + '/' + settings.device + '/');
+  // read the info
+  async.series([
+    function(callback) {
+      fs.open(syspath + settings.sent, 'r', function(err, fd) {
+          if (!err) {
+            callback(null, fd);
+          }
+        });
+    },
+    function(callback) {
+      fs.open(syspath + settings.rcvd, 'r', function(err, fd) {
+        if (!err) {
+          callback(null, fd);
+        }
+      });
+    }
+  ],
+  // optional callback
+  function(err, fdz) {
+    if (!err) {
+      fd = fdz;
+      outSlice = fdSlicer.createFromFd(fd[0]);
+      inSlice = fdSlicer.createFromFd(fd[1]);
+
+      job = setInterval(function() {
+        reader(function() {
+          // issue event!
+          if (config.update) {
+            self.emit('update', lastReport);
+          }
+        });
+      }, config.frequency);
+    }
+  });
 };
 
 /*
@@ -168,3 +182,72 @@ XRate.prototype.stop = function(callback) {
 XRate.prototype.status = function(callback) {
   callback(lastReport);
 };
+
+
+/*
+* unit tests
+*/
+
+// XRate.prototype.doStartCheck = function(callback) {
+//   callback(true);
+// };
+
+
+// XRate.prototype.doInitCheck = function(callback) {
+//   var passedTest = {
+//     pathExists: false
+//   };
+//   passedTest.pathExists = true;
+//   // callback(passedTest);
+
+//   var syspath = path.normalize(settings.base + '/' + settings.device + '/');
+
+//   async.filter([syspath + settings.sent, syspath + settings.rcvd], fs.exists, function(err, results) {
+//     if (err) {
+//       callback()
+//     }
+//     if (results[0] && results[1]) {
+//       passedTest.pathExists = true;
+//     }
+
+//     callback(passedTest);
+//   });
+// };
+
+
+// XRate.prototype.doReadCheck = function(callback) {
+//   // first, call read
+//   var oldReport = lastReport;
+//   reader(function() {
+//     var passedTest = {
+//       update: false,
+//       history: false
+//     };
+
+//     // if these things are the same, thats probably a bad sign
+//     if (oldReport !== lastReport) {
+//       passedTest.update = true;
+//     }
+
+//     // bad sign
+//     if (history.i.total !== 0 || history.i.total !== 0) {
+//       passedTest.history = true;
+//     }
+
+//     callback(passedTest);
+//   });
+// };
+
+// XRate.prototype.doCloseCheck = function(callback) {
+//   var passedTest = {
+//       stopped: false,
+//       history: false
+//     };
+//   this.stop(function(history) {
+//     passedTest.stopped = true;
+//     if (history) {
+//       passedTest.history = true;
+//     }
+//     callback(passedTest);
+//   });
+// };

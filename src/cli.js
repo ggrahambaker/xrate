@@ -32,4 +32,4 @@ setTimeout(function() {
     console.log(stats.o.total + ' :o ');
     console.log(stats.i.total + ' :i ');
   });
-}, 10000);
+}, 66600);
