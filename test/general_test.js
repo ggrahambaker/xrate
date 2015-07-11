@@ -1,6 +1,9 @@
 'use strict';
 
-var xrate = require('../src/xrate');
+var FDSlicer = require('fd-slicer'),
+  streamBuffers = require('stream-buffers'),
+  // Stream = require('stream'),
+  xrate = require('../src/xrate');
 
 /*
   ======== A Handy Little Nodeunit Reference ========
@@ -22,51 +25,61 @@ var xrate = require('../src/xrate');
     test.ifError(value)
 */
 
+
 exports.xrate = {
   develFilesOk: [
   ],
   setUp: function(done) {
     // start xrate
-    // console.log('\nsetUp');
     done();
   },
   tearDown: function(done) {
     // probably dont want to do anything for this,
-    done();
-  },
-  doStartCheck: function(test) {
-    xrate.doStartCheck(function(passed) {
-      test.expect(1);
-      test.ok(passed, 'up and running!');
-      console.log('start');
-      test.done();
+
+
+    xrate.stop(function() {
+      done();
     });
   },
   doInitCheck: function(test) {
-    xrate.doInitCheck(function(passed) {
-      test.expect(1);
-      test.ok(passed.pathExists, 'file we need is where is supposed to be');
-      console.log('init');
-      test.done();
+    // setup for the test
+    var increment = 60;
+    var starting = 300;
+
+    // to overwrite how much data read pulls in,
+    // Stream.Readable.read = function() {
+    //   starting += increment;
+    //   return starting;
+    // };
+    var sb = new streamBuffers.ReadableStreamBuffer({
+      frequency: 1000,
+      chunkSize: 32
     });
-  },
-  doReadCheck: function(test) {
-    xrate.doReadCheck(function(passed) {
-      console.log('read');
-      test.expect(2);
-      test.ok(passed.update, 'reader is updating the last report');
-      test.ok(passed.update, 'reader is updating the history');
+
+    FDSlicer.createReadStream = function() {
+      starting += increment;
+      console.log(starting + ' create rs');
+      sb.put(starting, 'utf8');
+      return sb;
+    };
+    test.expect(1);
+    xrate.start(null, FDSlicer);
+
+    setTimeout(function() {
+      xrate.status(function(report) {
+        console.log('\n');
+        console.log(report.i.first);
+        console.log(report.i.total);
+        console.log(report.i.average);
+      });
+
+      test.ok(true, 'true');
       test.done();
-    });
-  },
-  doCloseCheck: function(test) {
-    xrate.doCloseCheck(function(passed) {
-      test.expect(2);
-      test.ok(passed.stopped, 'service stopped');
-      test.ok(passed.history, 'reader is updating the history');
-      console.log('close');
-      test.done();
-    });
+    }, 6600);
   }
+  // doReadCheck: function(test) {
+  // },
+  // doCloseCheck: function(test) {
+  // }
 };
 

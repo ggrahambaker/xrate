@@ -11,25 +11,34 @@
 var xrate = require('./xrate');
 
 // pass in config file
-// var config = {
-// 		frequency: 1000,
-// 		units: 'bytes',
-// 		update: false
-// 	};
+var config = {
+		frequency: 1000,
+		units: 'bytes',
+		update: true
+	};
 // var xrate = new XRate(config)
 
-xrate.start();
+xrate.start(config);
+
 
 xrate.on('update', function(info) {
 	// log arbitrary information
-  console.log(info.o.first);
-  console.log(info.i.first);
+  console.log('i/o');
+  console.log(info.i + ' : i');
+  console.log(info.o + ' : o');
 });
 
 // kill it
 setTimeout(function() {
-  xrate.stop(function(stats) {
-    console.log(stats.o.total + ' :o ');
-    console.log(stats.i.total + ' :i ');
+  xrate.status(function(report) {
+    console.log('-------------');
+    console.log(report.i.first + 'status');
+
+
+    console.log('-------------');
+    xrate.stop(function(stats) {
+      console.log(stats.o.total + ' :o ');
+      console.log(stats.i.total + ' :i ');
+    });
   });
-}, 66600);
+}, 10000);
