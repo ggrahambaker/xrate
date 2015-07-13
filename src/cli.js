@@ -32,7 +32,8 @@ xrate.on('update', function(info) {
 setTimeout(function() {
   xrate.status(function(report) {
     console.log('-------------');
-    console.log(report.i.first + 'status');
+    console.log(report.i.first + ' - i status');
+    console.log(report.o.first + ' - o status');
 
 
     console.log('-------------');

@@ -47,14 +47,6 @@ var settings = {
       }
     },
     self,
-    history = {
-      i: {
-        total: 0
-      },
-      o: {
-        total: 0
-      }
-  },
   // fd = [],
   outSlice = null,
   inSlice = null,
@@ -75,82 +67,20 @@ function XRate() {
   self = this;
 }
 
-/*
-* helper for update to break things up a little
-*/
-// var avg = function(callback) {
-//   var o = 0,
-//   i = 0;
-//   tempLog[secondIndex++ % seconds] = [lastReport.o.first, lastReport.i.first];
-
-//   for (var j = 0; j < tempLog.length; j++) {
-//     o += tempLog[j][0];
-//     i += tempLog[j][1];
-//   }
-
-//   lastReport.o.average = o / tempLog.length;
-//   lastReport.i.average = i / tempLog.length;
-//   callback();
-// };
-
-/*
-* reads incoming and outgoing bandwidth information and then processes it
-* into ~lastReport~ which gives information about bandwidth usage in the last
-* second.
-*/
-// var reader = function(callback) {
-//   var oStream = outSlice.createReadStream();
-//   var iStream = inSlice.createReadStream();
-
-//   oStream.on('readable', function() {
-//     var chunk = oStream.read();
-//     // self.emit('test', chunk);
-//     console.log('o stream');
-
-//     if (lastReport.o.total === 0) {
-//       lastReport.o.total = chunk;
-//     } else {
-//       lastReport.o.first = chunk - lastReport.o.total;
-//       history.o.total += lastReport.o.first;
-//       lastReport.o.total = chunk;
-//       oStream = null;
-//     }
-//       console.log('then this');
-//   callback();
-//   });
-
-//   iStream.on('readable', function() {
-//     var chunk = iStream.read().toString().split(os.EOL)[0];
-//     console.log('i stream');
-//     if (lastReport.i.total === 0) {
-//       lastReport.i.total = chunk;
-//     } else {
-//       lastReport.i.first = chunk - lastReport.i.total;
-//       history.i.total += lastReport.i.first;
-//       lastReport.i.total = chunk;
-//       iStream = null;
-//     }
-//       console.log('then this');
-//       callback();
-//   });
-
-// };
 var update = function() {
   var oStream = outSlice.createReadStream();
   var iStream = inSlice.createReadStream();
 
-  oStream.on('readable', function() {
-    var chunk = oStream.read().toString().split(os.EOL)[0];
-    // self.emit('test', chunk);
-    // console.log('o stream');
+  oStream.once('data', function(chunk) {
+    chunk = chunk.toString().split(os.EOL)[0];
+    console.log(chunk + ' : the o chunk');
     oStat.addEntry(chunk);
   });
 
-  iStream.on('readable', function() {
-    var chunk = iStream.read().toString().split(os.EOL)[0];
-    // console.log('i stream');
+  iStream.once('data', function(chunk) {
+    chunk = chunk.toString().split(os.EOL)[0];
+    console.log(chunk + ' : the i chunk');
     iStat.addEntry(chunk);
-    // console.log('then this');
   });
 };
 
@@ -158,7 +88,7 @@ XRate.prototype.start = function(opConfig, fd) {
   if (opConfig) {
     config = opConfig;
   }
-  fdSlicer = fd;
+
 
   var syspath = path.normalize(settings.base + '/' + settings.device + '/');
   // read the info
@@ -181,8 +111,10 @@ XRate.prototype.start = function(opConfig, fd) {
   function(err, fdz) {
     if (!err) {
       fd = fdz;
+
       outSlice = fdSlicer.createFromFd(fd[0]);
       inSlice = fdSlicer.createFromFd(fd[1]);
+
       oStat = stats.createStat();
       iStat = stats.createStat();
 
@@ -208,15 +140,16 @@ XRate.prototype.start = function(opConfig, fd) {
 */
 XRate.prototype.stop = function(callback) {
   clearInterval(job);
+  var history = {
+    i: {
+      total: iStat.last()
+    },
+    o: {
+      total: oStat.last()
+    }
+  };
+
   callback(history);
-};
-
-XRate.prototype.bandwidthIn = function() {
-
-};
-
-XRate.prototype.bandwidthOut = function() {
-
 };
 
 /*

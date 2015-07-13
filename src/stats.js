@@ -9,6 +9,7 @@ var Stat = function() {
   self.lastReport = 0;
   self.count = 0;
   self.limit = 60;
+  self.total = 0;
 };
 
 Stat.prototype.addEntry = function(entry) {
@@ -20,6 +21,7 @@ Stat.prototype.addEntry = function(entry) {
     self.first = entry - self.lastReport;
     self.lastReport = entry;
     self.lastEntries[self.count++ % self.limit] = self.first;
+    self.total += self.first;
   }
 };
 
@@ -30,14 +32,23 @@ Stat.prototype.lastReport = function() {
 var crunch = function(history, callback) {
   // console.log(history.length)
   var aveg = 0;
+  var off = 0;
   for (var i = 0; i < history.length; i++) {
+    if (history[i] === 0) {
+      off++;
+      continue;
+    }
     aveg += history[i];
   }
 
-  aveg = aveg / history.length;
-  console.log('average');
+  aveg = aveg / (history.length - off);
   console.log(aveg);
   callback(aveg);
+};
+
+Stat.prototype.last = function() {
+  var self = this;
+  return self.total;
 };
 
 Stat.prototype.report = function(callback) {

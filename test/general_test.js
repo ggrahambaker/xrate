@@ -1,8 +1,7 @@
 'use strict';
 
-var FDSlicer = require('fd-slicer'),
-  streamBuffers = require('stream-buffers'),
-  // Stream = require('stream'),
+var streamBuffers = require('stream-buffers'),
+  fds = require('fd-slicer'),
   xrate = require('../src/xrate');
 
 /*
@@ -25,6 +24,7 @@ var FDSlicer = require('fd-slicer'),
     test.ifError(value)
 */
 
+var _createFromFd = fds.createFromFd;
 
 exports.xrate = {
   develFilesOk: [
@@ -35,10 +35,9 @@ exports.xrate = {
   },
   tearDown: function(done) {
     // probably dont want to do anything for this,
-
-
     xrate.stop(function() {
       done();
+      fds.createFromFd = _createFromFd;
     });
   },
   doInitCheck: function(test) {
@@ -46,36 +45,34 @@ exports.xrate = {
     var increment = 60;
     var starting = 300;
 
-    // to overwrite how much data read pulls in,
-    // Stream.Readable.read = function() {
-    //   starting += increment;
-    //   return starting;
-    // };
-    var sb = new streamBuffers.ReadableStreamBuffer({
-      frequency: 1000,
-      chunkSize: 32
-    });
+    function StreamMock() {
+      var self = this;
 
-    FDSlicer.createReadStream = function() {
-      starting += increment;
-      console.log(starting + ' create rs');
-      sb.put(starting, 'utf8');
-      return sb;
+      var sb = new streamBuffers.ReadableStreamBuffer({
+        frequency: 1000,
+        chunkSize: 32
+      });
+
+      self.createReadStream = function() {
+        starting += increment;
+        sb.put(starting, 'utf8');
+        return sb;
+      };
+    }
+    fds.createFromFd = function() {
+      return new StreamMock();
     };
-    test.expect(1);
-    xrate.start(null, FDSlicer);
+
+    test.expect(2);
+    xrate.start();
 
     setTimeout(function() {
       xrate.status(function(report) {
-        console.log('\n');
-        console.log(report.i.first);
-        console.log(report.i.total);
-        console.log(report.i.average);
+        test.ok(report.i.first === (increment * 2), 'should be recording in that increment');
+        test.ok(report.i.average === (increment * 2), 'average should be 2 times increment');
       });
-
-      test.ok(true, 'true');
       test.done();
-    }, 6600);
+    }, 5000);
   }
   // doReadCheck: function(test) {
   // },
