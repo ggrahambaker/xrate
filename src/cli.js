@@ -7,7 +7,6 @@
  *
  */
 'use strict';
-
 var xrate = require('./xrate');
 
 // pass in config file
@@ -16,10 +15,8 @@ var config = {
 		units: 'bytes',
 		update: true
 	};
-// var xrate = new XRate(config)
 
 xrate.start(config);
-
 
 xrate.on('update', function(info) {
 	// log arbitrary information

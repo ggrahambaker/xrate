@@ -31,9 +31,6 @@ var settings = {
       update: true
     },
     job = null,
-    // secondIndex = 0,
-    // tempLog = [], // keeps track of up records from the last minute,
-    // seconds = 60,
     lastReport = {
       i: {
         total: 0,
@@ -88,7 +85,6 @@ XRate.prototype.start = function(opConfig) {
   if (opConfig) {
     config = opConfig;
   }
-
 
   var syspath = path.normalize(settings.base + '/' + settings.device + '/');
   // read the info

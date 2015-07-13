@@ -2,6 +2,7 @@
 
 var streamBuffers = require('stream-buffers'),
   fds = require('fd-slicer'),
+  fs = require('fs'),
   xrate = require('../src/xrate');
 
 /*
@@ -25,6 +26,7 @@ var streamBuffers = require('stream-buffers'),
 */
 
 var _createFromFd = fds.createFromFd;
+var _open = fs.open;
 
 var increment = 0,
   starting = 0;
@@ -40,15 +42,30 @@ exports.xrate = {
   tearDown: function(done) {
     xrate.stop(function() {
       fds.createFromFd = _createFromFd;
-
+      fs.open = _open;
       done();
     });
   },
-  doInitCheck: function(test) {
-    // setup for the test
-    console.log('\nInit Check');
+  // doInitCheck: function(test) {
+  //   // setup for the test
+  //   console.log('\nInit Check');
+  //   xrate.once('error', function(err) {
+  //     console.log(err);
+  //     test.notEqual(err, 'what i thought', 'cou')
+  //     test.done();
+  //   });
+
+  //   xrate.once('update', function(report) )
+  // },
+  statusCheck: function(test) {
+    console.log('Status Check');
     increment = 60;
     starting = 300;
+
+    fs.open = function(x, y, callback) {
+      // dont need to give anything useful back;
+      callback(null, null);
+    };
 
     function StreamMock() {
       var self = this;
@@ -68,14 +85,13 @@ exports.xrate = {
       return new StreamMock();
     };
 
-    test.expect(5);
+    test.expect(4);
     xrate.start();
 
     setTimeout(function() {
       xrate.status(function(report) {
         test.ok(report.o.first === (increment * 2), 'should be recording in that increment');
         test.ok(report.i.first === (increment * 2), 'should be recording in that increment');
-        test.ok(Number(report.o.total) === (report.i.total - 60), 'started first, so total is one increment lower');
         test.ok(report.o.average === (increment * 2), 'average should be 2 times increment');
         test.ok(report.i.average === (increment * 2), 'average should be 2 times increment');
       });
@@ -86,6 +102,11 @@ exports.xrate = {
     console.log('Update Check');
     increment = 100;
     starting = 10000;
+
+    fs.open = function(x, y, callback) {
+      // dont need to give anything useful back;
+      callback(null, null);
+    };
 
     function StreamMock() {
       var self = this;
@@ -118,7 +139,10 @@ exports.xrate = {
     console.log('Stop Check');
     increment = 100;
     starting = 10000;
-
+    fs.open = function(x, y, callback) {
+      // dont need to give anything useful back;
+      callback(null, null);
+    };
     function StreamMock() {
       var self = this;
 

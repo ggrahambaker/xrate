@@ -76,7 +76,7 @@ Stat.prototype.report = function(callback) {
     // console.log(mean + ' self - mean');
     toRet = {
       first: self.first,
-      total: self.lastReport,
+      total: self.total,
       average: mean
     };
 
