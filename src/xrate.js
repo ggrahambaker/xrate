@@ -73,18 +73,18 @@ var update = function() {
 
   oStream.once('data', function(chunk) {
     chunk = chunk.toString().split(os.EOL)[0];
-    console.log(chunk + ' : the o chunk');
+    // console.log(chunk + ' : the o chunk');
     oStat.addEntry(chunk);
   });
 
   iStream.once('data', function(chunk) {
     chunk = chunk.toString().split(os.EOL)[0];
-    console.log(chunk + ' : the i chunk');
+    // console.log(chunk + ' : the i chunk');
     iStat.addEntry(chunk);
   });
 };
 
-XRate.prototype.start = function(opConfig, fd) {
+XRate.prototype.start = function(opConfig) {
   if (opConfig) {
     config = opConfig;
   }
@@ -97,21 +97,24 @@ XRate.prototype.start = function(opConfig, fd) {
       fs.open(syspath + settings.sent, 'r', function(err, fd) {
           if (!err) {
             callback(null, fd);
+          } else {
+            callback(err);
           }
         });
     },
     function(callback) {
       fs.open(syspath + settings.rcvd, 'r', function(err, fd) {
+        // console.log(err + ' the error 2')
         if (!err) {
           callback(null, fd);
+        } else {
+          callback(err);
         }
       });
     }
   ],
-  function(err, fdz) {
+  function(err, fd) {
     if (!err) {
-      fd = fdz;
-
       outSlice = fdSlicer.createFromFd(fd[0]);
       inSlice = fdSlicer.createFromFd(fd[1]);
 
@@ -121,16 +124,16 @@ XRate.prototype.start = function(opConfig, fd) {
       job = setInterval(function() {
         update();
         if (config.update) {
-          // var inc, out;
-          // inc = iStat.lastReport();
-          // out = oStat.lastReport()
           lastReport = {
             i: iStat.first,
             o: oStat.first
           };
+
           self.emit('update', lastReport);
         }
       }, config.frequency);
+    } else {
+      self.emit('error', 'could not find bandwidth data');
     }
   });
 };
@@ -140,6 +143,7 @@ XRate.prototype.start = function(opConfig, fd) {
 */
 XRate.prototype.stop = function(callback) {
   clearInterval(job);
+ // console.log(iStat.last() + ' ><><' +oStat.last());
   var history = {
     i: {
       total: iStat.last()
@@ -148,7 +152,6 @@ XRate.prototype.stop = function(callback) {
       total: oStat.last()
     }
   };
-
   callback(history);
 };
 
@@ -169,9 +172,10 @@ XRate.prototype.status = function(callback) {
   });
 };
 
-
-XRate.prototype.settings = function(callback) {
-  callback(settings);
+XRate.prototype.settings = function(newSettings) {
+  // console.log('\n' + newSettings.base);
+  settings = newSettings;
+  // console.log(settings.base);
 };
 
 XRate.prototype.config = function(callback) {
