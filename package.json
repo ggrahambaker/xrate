@@ -1,7 +1,7 @@
 {
   "name": "xrate",
   "version": "0.0.1",
-  "description": "Calculate a NIC's current transfer rate",
+  "description": "Report bandwidth usage on linux servers",
   "main": "index.js",
   "scripts": {
     "test": "grunt test",
@@ -22,23 +22,18 @@
     "transfer",
     "rate"
   ],
-  "author": "Ari Aosved",
+  "author": "Graham Baker",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/accretive/xrate/issues"
   },
   "dependencies": {
     "async": "^0.9.0",
-    "commander": "^2.8.1",
     "fd-slicer": "^1.0.1",
-    "horaa": "^0.1.2-alpha",
-    "portscanner": "^1.0.0",
-    "stream-buffers": "^2.2.0",
-    "winston": "^1.0.1"
+    "stream-buffers": "^2.2.0"
   },
   "devDependencies": {
     "atg-js-styleguide": "^1.0.6",
-    "atg-service-control": "*",
     "grunt": "*",
     "grunt-contrib-clean": "*",
     "grunt-contrib-jshint": "*",

@@ -32,7 +32,6 @@ setTimeout(function() {
     console.log(report.i.first + ' - i status');
     console.log(report.o.first + ' - o status');
 
-
     console.log('-------------');
     xrate.stop(function(stats) {
       console.log(stats.o.total + ' :o ');
