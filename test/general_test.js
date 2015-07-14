@@ -58,7 +58,7 @@ exports.xrate = {
   //   xrate.once('update', function(report) )
   // },
   statusCheck: function(test) {
-    console.log('Status Check');
+    console.log('\nStatus Check');
     increment = 60;
     starting = 300;
 
