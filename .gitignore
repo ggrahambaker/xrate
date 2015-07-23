@@ -4,3 +4,4 @@
 .npmignore
 npm-debug.log
 asi.js
+xrate-*

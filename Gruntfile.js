@@ -88,18 +88,18 @@ module.exports = function(grunt) {
 
   // ============================================================================
 
-grunt.registerTask('testPrep', [
+  grunt.registerTask('testPrep', [
     'clean:coverage',
     'jshint',
     'instrument'
-  ])
+  ]);
 
   grunt.registerTask('testUnit', [
     'nodeunit',
     'storeCoverage',
     'makeReport'
-  ])
+  ]);
 
-  grunt.registerTask('test', ['testPrep', 'testUnit'])
+  grunt.registerTask('test', ['testPrep', 'testUnit']);
   grunt.registerTask('default', ['eslint', 'test']);
 };
