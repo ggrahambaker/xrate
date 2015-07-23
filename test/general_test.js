@@ -3,7 +3,7 @@
 var streamBuffers = require('stream-buffers'),
   fds = require('fd-slicer'),
   fs = require('fs'),
-  xrate = require('../src/xrate');
+  xrate = require('../coverage/instrument/src/xrate');
 
 /*
   ======== A Handy Little Nodeunit Reference ========

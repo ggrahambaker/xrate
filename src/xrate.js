@@ -24,6 +24,9 @@ var settings = {
       sent: 'statistics/rx_bytes',
       rcvd: 'statistics/tx_bytes'
     },
+    state = {
+      running: false
+    },
 // default config settings
     config = {
       frequency: 1000,
@@ -44,7 +47,6 @@ var settings = {
       }
     },
     self,
-  // fd = [],
   outSlice = null,
   inSlice = null,
   iStat = null,
@@ -62,6 +64,8 @@ module.exports = new XRate();
 function XRate() {
   emitter.call(this);
   self = this;
+  self.state = state
+  self.config = config
 }
 
 var update = function() {
@@ -70,20 +74,21 @@ var update = function() {
 
   oStream.once('data', function(chunk) {
     chunk = chunk.toString().split(os.EOL)[0];
-    // console.log(chunk + ' : the o chunk');
+    //console.log(chunk + ' : the o chunk');
     oStat.addEntry(chunk);
   });
 
   iStream.once('data', function(chunk) {
     chunk = chunk.toString().split(os.EOL)[0];
-    // console.log(chunk + ' : the i chunk');
+    //console.log(chunk + ' : the i chunk');
     iStat.addEntry(chunk);
   });
 };
 
 XRate.prototype.start = function(opConfig) {
+  self = this
   if (opConfig) {
-    config = opConfig;
+    self.config = opConfig;
   }
 
   var syspath = path.normalize(settings.base + '/' + settings.device + '/');
@@ -100,7 +105,6 @@ XRate.prototype.start = function(opConfig) {
     },
     function(callback) {
       fs.open(syspath + settings.rcvd, 'r', function(err, fd) {
-        // console.log(err + ' the error 2')
         if (!err) {
           callback(null, fd);
         } else {
@@ -120,12 +124,21 @@ XRate.prototype.start = function(opConfig) {
       job = setInterval(function() {
         update();
         if (config.update) {
-          lastReport = {
-            i: iStat.first,
-            o: oStat.first
-          };
-
-          self.emit('update', lastReport);
+          async.series([
+            iStat.report,
+            oStat.report
+          ],
+          function(err, reports) {
+            if(err) {
+              self.emit('init')
+            } else {
+              lastReport = {
+                i: reports[0],
+                o: reports[1]
+              };
+              self.emit('update', lastReport);
+            }
+          })
         }
       }, config.frequency);
     } else {
@@ -155,17 +168,20 @@ XRate.prototype.stop = function(callback) {
 * reports the most recent ~lastReport~
 */
 XRate.prototype.status = function(callback) {
-  oStat.report(function(report) {
-    iStat.report(function(rep) {
-      // console.log(report.average);
-      // console.log(rep.average);
-      var stat = {
-        i: rep,
-        o: report
-      };
-      callback(stat);
-    });
-  });
+  async.series([
+    iStat.report,
+    oStat.report
+  ],
+  function(err, reports) {
+    if(err) {
+      callback(err)
+    }
+    last = {
+      i: reports[0],
+      o: reports[1]
+    };
+    callback(null, last)
+  })
 };
 
 XRate.prototype.settings = function(newSettings) {

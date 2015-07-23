@@ -2,3 +2,5 @@
 /coverage
 .DS_Store
 .npmignore
+npm-debug.log
+asi.js

@@ -7,82 +7,101 @@
  * the logic of remembering data from the place that fetches it
  *
  */
-'use strict';
+var util = require('util');
 
 /**
  * constructor
  */
 var Stat = function() {
-  var self = this;
-  self.average = 0;
-  self.lastEntries = [];
-  self.first = 0;
-  self.lastReport = 0;
-  self.count = 0;
-  self.limit = 60;
-  self.total = 0;
-};
+  var self = this
+  this.average = 0
+  this.lastEntries = []
+  this.first = 0
+  this.lastReport = 0
+  this.count = 0
+  this.limit = 60
+  this.total = 0
+  this.max = 0
 
-/**
- * @param current figure on bandwidth
- * take raw value and turn it to per second
- */
-Stat.prototype.addEntry = function(entry) {
-	// if its the first thing
-  var self = this;
-  if (self.lastReport === 0) {
-    self.lastReport = entry;
-  } else {
-    self.first = entry - self.lastReport;
-    self.lastReport = entry;
-    self.lastEntries[self.count++ % self.limit] = self.first;
-    self.total += self.first;
-  }
-};
 
-Stat.prototype.lastReport = function() {
-  return this.first;
-};
-/**
- * helper to report mb/sec
- */
-var crunch = function(history, callback) {
-  // console.log(history.length)
-  var aveg = 0;
-  var off = 0;
-  for (var i = 0; i < history.length; i++) {
-    if (history[i] === 0) {
-      off++;
-      continue;
+
+  //===================================
+  //Methods
+
+  /**
+   * @param current figure on bandwidth
+   * take raw value and turn it to per second
+   */
+  this.addEntry = function(entry) {
+    // if its the first thing
+    if (self.lastReport === 0) {
+      self.lastReport = entry;
+    } else {
+      self.first = entry - self.lastReport;
+      if(self.first > self.max) {
+        self.max = self.first
+      }
+      self.lastReport = entry;
+      self.lastEntries[self.count++ % self.limit] = self.first;
+      self.total += self.first;
     }
-    aveg += history[i];
+  };
+
+
+  this.isEmpty = function() {
+    return this.length === 0
   }
 
-  aveg = aveg / (history.length - off);
-  callback(aveg);
+  /**
+   * helper to report mb/sec
+   */
+  var crunch = function(history, callback) {
+    // console.log(history.length)
+    var aveg = 0;
+    var off = 0;
+    for (var i = 0; i < history.length; i++) {
+      if (history[i] === 0) {
+        off++;
+        continue;
+      }
+      aveg += history[i];
+    }
+
+    aveg = aveg / (history.length - off);
+    // console.log(aveg + ' ->> aveg')
+
+    callback(aveg);
+  };
+
+
+  this.last = function() {
+    return this.total;
+  };
+
+  /**
+  * reports stats
+  * if first time around, it will tell xrate that its initializing now
+  */
+  this.report = function(callback) {
+
+    if(self.lastEntries.length < 5) {
+      callback(true);
+      return;
+    } else {
+      //console.log(' or her here?? ')
+      crunch(self.lastEntries, function(mean) {
+        callback(null, {
+          first: self.first,
+          total: self.total,
+          average: mean,
+          max: self.max
+        });
+      });
+    }
+  };
 };
 
-Stat.prototype.last = function() {
-  var self = this;
-  return self.total;
-};
 
-Stat.prototype.report = function(callback) {
-  var self = this;
-  var toRet = {};
-
-  crunch(self.lastEntries, function(mean) {
-    // console.log(this.first + ' self - first');
-    // console.log(mean + ' self - mean');
-    toRet = {
-      first: self.first,
-      total: self.total,
-      average: mean
-    };
-
-    callback(toRet);
-  });
-};
 /**
  * outword facing point of contact
  */

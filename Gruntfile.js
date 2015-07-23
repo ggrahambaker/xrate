@@ -36,7 +36,38 @@ module.exports = function(grunt) {
 
     // Unit tests.
     nodeunit: {
+      options: {
+        reporter: 'junit',
+        reporterOptions: {
+          output: 'coverage'
+        }
+      },
       tests: ['test/*_test.js']
+    },
+
+
+    instrument: {
+      files: 'src/*.js',
+      options: {
+        lazy: true,
+        basePath: 'coverage/instrument/'
+      }
+    },
+
+    storeCoverage: {
+      options: {
+        dir: 'coverage/reports'
+      }
+    },
+
+
+    makeReport: {
+      src: 'coverage/reports/**/*.json',
+      options: {
+        type: 'lcov',
+        dir: 'coverage/reports',
+        print: 'detail'
+      }
     },
 
     // Automate version bumps
@@ -57,11 +88,18 @@ module.exports = function(grunt) {
 
   // ============================================================================
 
-  grunt.registerTask('test', [
+grunt.registerTask('testPrep', [
     'clean:coverage',
     'jshint',
-    'nodeunit'
-  ]);
+    'instrument'
+  ])
 
+  grunt.registerTask('testUnit', [
+    'nodeunit',
+    'storeCoverage',
+    'makeReport'
+  ])
+
+  grunt.registerTask('test', ['testPrep', 'testUnit'])
   grunt.registerTask('default', ['eslint', 'test']);
 };

@@ -1,11 +1,13 @@
 {
   "name": "xrate",
   "version": "0.0.1",
-  "description": "Report bandwidth usage on linux servers",
+  "description": "Report bandwidth usage on linux servers lolll",
   "main": "index.js",
   "scripts": {
-    "test": "grunt test",
-    "install": "cp node_modules/atg-js-styleguide/git-script.sh .git/hooks/pre-commit"
+    "test": "grunt test"
+  },
+  "bin": {
+    "xrate": "./src/cli.js"
   },
   "repository": {
     "type": "git",
@@ -30,6 +32,8 @@
   "dependencies": {
     "async": "^0.9.0",
     "fd-slicer": "^1.0.1",
+    "minimist": "^1.1.2",
+    "nopt": "^3.0.3",
     "stream-buffers": "^2.2.0"
   },
   "devDependencies": {
@@ -38,6 +42,7 @@
     "grunt-contrib-clean": "*",
     "grunt-contrib-jshint": "*",
     "grunt-contrib-nodeunit": "*",
+    "grunt-istanbul": "^0.6.1",
     "grunt-release": "*",
     "matchdep": "*"
   }

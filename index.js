@@ -1,11 +1,3 @@
-/**
- * @license XRate
- * Copyright (c) 2014 Accretive Technology Group, Inc.  http://accretivetg.com
- * MIT Licensed  https://github.com/accretive/xrate/blob/master/LICENSE
- *
- * @file index.js
- */
-
+#!/usr/bin/env node
 'use strict';
-
-module.exports = require('./src/cli');
+module.exports = require('./src/xrate');
