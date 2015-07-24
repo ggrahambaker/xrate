@@ -34,18 +34,6 @@ var settings = {
       update: true
     },
     job = null,
-    lastReport = {
-      i: {
-        total: 0,
-        first: 0,
-        average: 0
-      },
-      o: {
-        total: 0,
-        first: 0,
-        average: 0
-      }
-    },
     self,
   outSlice = null,
   inSlice = null,
@@ -64,29 +52,52 @@ module.exports = new XRate();
 function XRate() {
   emitter.call(this);
   self = this;
-  self.state = state
-  self.config = config
+  self.state = state;
+  self.config = config;
 }
 
-var update = function() {
+var update = function(callback) {
   var oStream = outSlice.createReadStream();
-  var iStream = inSlice.createReadStream();
 
   oStream.once('data', function(chunk) {
     chunk = chunk.toString().split(os.EOL)[0];
-    //console.log(chunk + ' : the o chunk');
     oStat.addEntry(chunk);
-  });
 
-  iStream.once('data', function(chunk) {
-    chunk = chunk.toString().split(os.EOL)[0];
-    //console.log(chunk + ' : the i chunk');
-    iStat.addEntry(chunk);
+    var iStream = inSlice.createReadStream();
+
+    iStream.once('data', function(chunk) {
+      chunk = chunk.toString().split(os.EOL)[0];
+
+      iStat.addEntry(chunk);
+      callback();
+    });
+  });
+};
+
+var fetchStats = function() {
+  update(function() {
+    if (config.update) {
+      async.series([
+        iStat.report,
+        oStat.report
+      ],
+      function(err, reports) {
+        if (err) {
+          self.emit('init');
+        } else {
+          var lastReport = {
+            i: reports[0],
+            o: reports[1]
+          };
+          self.emit('update', lastReport);
+        }
+      });
+    }
   });
 };
 
 XRate.prototype.start = function(opConfig) {
-  self = this
+  self = this;
   if (opConfig) {
     self.config = opConfig;
   }
@@ -122,24 +133,7 @@ XRate.prototype.start = function(opConfig) {
       iStat = stats.createStat();
 
       job = setInterval(function() {
-        update();
-        if (config.update) {
-          async.series([
-            iStat.report,
-            oStat.report
-          ],
-          function(err, reports) {
-            if(err) {
-              self.emit('init')
-            } else {
-              lastReport = {
-                i: reports[0],
-                o: reports[1]
-              };
-              self.emit('update', lastReport);
-            }
-          })
-        }
+        fetchStats();
       }, config.frequency);
     } else {
       self.emit('error', 'could not find bandwidth data');
@@ -152,42 +146,62 @@ XRate.prototype.start = function(opConfig) {
 */
 XRate.prototype.stop = function(callback) {
   clearInterval(job);
- // console.log(iStat.last() + ' ><><' +oStat.last());
-  var history = {
-    i: {
-      total: iStat.last()
-    },
-    o: {
-      total: oStat.last()
+  update(function() {
+    if (config.update) {
+      async.series([
+        iStat.report,
+        oStat.report
+      ],
+      function(err, reports) {
+        if (err) {
+          return callback(err);
+        }
+        // skip this report
+        if (reports[0].first === 0) {
+          return callback(new Error('throwing out bad report'));
+        }
+
+        var last = {
+          i: reports[0],
+          o: reports[1]
+        };
+        callback(null, last);
+      });
     }
-  };
-  callback(history);
+  });
 };
 
 /*
 * reports the most recent ~lastReport~
 */
 XRate.prototype.status = function(callback) {
-  async.series([
-    iStat.report,
-    oStat.report
-  ],
-  function(err, reports) {
-    if(err) {
-      callback(err)
+  update(function() {
+    if (config.update) {
+      async.series([
+        iStat.report,
+        oStat.report
+      ],
+      function(err, reports) {
+        if (err) {
+          return callback(err);
+        }
+        // skip this report
+        if (reports[0].first === 0) {
+          return callback(new Error('throwing out bad report'));
+        }
+
+        var last = {
+          i: reports[0],
+          o: reports[1]
+        };
+        callback(null, last);
+      });
     }
-    last = {
-      i: reports[0],
-      o: reports[1]
-    };
-    callback(null, last)
-  })
+  });
 };
 
 XRate.prototype.settings = function(newSettings) {
-  // console.log('\n' + newSettings.base);
   settings = newSettings;
-  // console.log(settings.base);
 };
 
 XRate.prototype.config = function(callback) {

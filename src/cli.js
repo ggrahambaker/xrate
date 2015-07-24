@@ -8,35 +8,25 @@
  */
 'use strict';
 var xrate = require('./xrate'),
-  os = require('os'),
-  stream = require('stream'),
-  minimist = require('minimist')
+  // os = require('os'),
+  // stream = require('stream'),
+  minimist = require('minimist');
 
-
-var display = {
-  incoming: {},
-  outgoing: {}
-}
-
-process.title = 'Xrate'
-
-
+process.title = 'Xrate';
 
 var argv = minimist(process.argv.slice(2), {});
 
+// var started = Date.now();
+// function getRuntime () {
+//   return Math.floor((Date.now() - started) / 1000);
+// }
 
-var started = Date.now();
-function getRuntime () {
-  return Math.floor((Date.now() - started) / 1000);
-}
-
-
-var command = argv._[0]
+var command = argv._[0];
 
 if (command === 'help' || argv.help) {
-  help()
+  help();
 } else if (command === 'start' || argv.help) {
-  runStart()
+  runStart();
 } else if (command === 'status' || argv.help) {
   console.log('status');
 } else if (command === 'stop' || argv.help) {
@@ -44,11 +34,8 @@ if (command === 'help' || argv.help) {
 } else if (command === 'update' || argv.help) {
   console.log('update');
 } else {
-  help()
+  help();
 }
-
-
-
 
 function help() {
   console.log();
@@ -58,32 +45,30 @@ function help() {
 
 
 function runStart(config) {
-  if(!xrate.state.running) {
-    if(config){
-      xrate.start()
+  if (!xrate.state.running) {
+    if (config) {
+      xrate.start();
     }
-    xrate.start()
+    xrate.start();
   }
 
   xrate.on('init', function() {
-    process.stdout.write('starting up now!')
-  })
+    process.stdout.write('starting up now!');
+  });
 
-  xrate.on('update', function(info) {
-    var average = info.i.average.toString()
-
-    xrateIn.push(average);
-
-    var is = process.stdout.write(average)
-
+  xrate.on('update', function(res) {
+    // var average = info.i.average.toString();
+    console.log('res\n', res);
     // console.log(is)
     // process.stdout.write(info.o.average)
-  })
+  });
+
+  // setTimeout(function() {
+  //   xrate.status(function(err, res) {
+  //     console.log('status res\n', res);
+  //   });
+  // }, 5000);
 }
-
-
-
-
 //   helpText = exports.helpText =
 //     'Usage: index.js <action>' + os.EOL +
 //     '   --start       :xrate starts monitoring bandwidth usage' + os.EOL +
@@ -121,18 +106,10 @@ function runStart(config) {
 //     // Whether or not the last status line showed no activity
 //     , lastStatusZero: true
 //   }
-
-
-
 // var run = exports.run = function(callback) {
 //   if(options.help)
 
 // }
-
-
-
-
-
 
 /*
 // pass in config file
