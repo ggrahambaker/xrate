@@ -1,0 +1,6 @@
+Release/obj.target/hello/xrate.o: ../xrate.cc \
+  /Users/grahambaker/.node-gyp/0.12.4/src/node.h \
+  /Users/grahambaker/.node-gyp/0.12.4/deps/v8/include/v8.h \
+  /Users/grahambaker/.node-gyp/0.12.4/deps/v8/include/v8stdint.h \
+  /Users/grahambaker/.node-gyp/0.12.4/deps/v8/include/v8config.h \
+  /Users/grahambaker/.node-gyp/0.12.4/src/node_version.h
