@@ -5,10 +5,12 @@ An api for monitoring incoming and outgoing bandwidth usage for Linux servers. T
 ##API
  - xrate
 	 - start
-	 - Event: 'error'
-	 - Event: 'update'
+     - update 
 	 - stop
-	 - status
+     - Event: 'error'
+	 - Event: 'update'
+	 
+
 
 
 ##Starting XRate
