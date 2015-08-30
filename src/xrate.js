@@ -35,7 +35,6 @@ function XRate() {
   // default config
   this.config = {
     frequency: 1000,
-    units: 'bytes',
     update: true
   };
 
@@ -97,7 +96,7 @@ function XRate() {
         chunk = chunk.toString().split(os.EOL)[0];
         self.oStat.addEntry(chunk);
       });
-    }, 1000);
+    }, self.config.frequency);
   };
 
   // ================= Public Methods =================
