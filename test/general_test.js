@@ -1,8 +1,8 @@
 'use strict';
 
 var streamBuffers = require('stream-buffers'),
-  fds = require('fd-slicer'),
   fs = require('fs'),
+  util = require('util'),
   xrate = require('../coverage/instrument/src/xrate');
 
 /*
@@ -25,8 +25,9 @@ var streamBuffers = require('stream-buffers'),
     test.ifError(value)
 */
 
-var _createFromFd = fds.createFromFd;
+var _createReadStream = fs.createReadStream;
 var _open = fs.open;
+
 
 // var increment = 0,
 //   starting = 0;
@@ -41,7 +42,7 @@ exports.xrate = {
   },
   tearDown: function(done) {
     xrate.stop(function() {
-      fds.createFromFd = _createFromFd;
+      fs.createReadStream = _createReadStream;
       fs.open = _open;
       done();
     });
@@ -51,117 +52,82 @@ exports.xrate = {
     var increment = 60;
     var starting = 300;
 
-    fs.open = function(x, y, callback) {
-      // dont need to give anything useful back;
-      callback(null, null);
-    };
-
-    function StreamMock() {
-      var self = this;
-
-      this.sb = new streamBuffers.ReadableStreamBuffer({
+    fs.createReadStream = function() {
+      var sm = new streamBuffers.ReadableStreamBuffer({
         frequency: 1,
         chunkSize: 32
       });
-
-      this.createReadStream = function() {
-        starting += increment;
-        self.sb.put(starting, 'utf8');
-        return self.sb;
-      };
-    }
-
-    fds.createFromFd = function() {
-      return new StreamMock();
+      starting += increment;
+      sm.put(starting, 'utf8');
+      return sm;
     };
 
-    test.expect(5);
+    test.expect(4);
     xrate.start();
 
     setTimeout(function() {
-      xrate.status(function(err, report) {
-        test.ok(!err, 'there should be no error here!');
-        test.ok(report.o.first === (increment * 2), 'should be recording in that increment');
-        test.ok(report.i.first === (increment * 2), 'should be recording in that increment');
-        test.ok(report.o.average === (increment * 2), 'average should be 2 times increment');
-        test.ok(report.i.average === (increment * 2), 'average should be 2 times increment');
+      xrate.update(function(report) {
+        test.ok(report.o.first === 120, 'should be recording in that increment');
+        test.ok(report.i.first === 120, 'should be recording in that increment');
+        test.ok(report.o.total === 360, 'total should be 2 times increment');
+        test.ok(report.i.total === 360, 'total should be 2 times increment');
         test.done();
       });
     }, 5000);
   },
   updateCheck: function(test) {
     console.log('Update Check');
-    var increment = 100;
-    var starting = 10000;
+    var increment = 60;
+    var starting = 300;
 
-    fs.open = function(x, y, callback) {
-      // dont need to give anything useful back;
-      callback(null, null);
-    };
-
-    function StreamMock() {
-      var self = this;
-      self.sb = new streamBuffers.ReadableStreamBuffer({
+    fs.createReadStream = function() {
+      var sm = new streamBuffers.ReadableStreamBuffer({
         frequency: 1,
         chunkSize: 32
       });
-
-      this.createReadStream = function() {
-        starting += increment;
-
-        self.sb.put(starting, 'utf8');
-        return self.sb;
-      };
-    }
-    fds.createFromFd = function() {
-      return new StreamMock();
+      starting += increment;
+      sm.put(starting, 'utf8');
+      return sm;
     };
 
-    test.expect(2);
+    test.expect(4);
     xrate.start();
     setTimeout(function() {
       xrate.once('update', function(last) {
-        test.ok(last.o.first === 200, 'right increment');
-        test.ok(last.i.first === 200, 'right increment');
+        console.log('update : ' + util.inspect(last));
+        // should be the same as before,
+        // just trying a different way of getting it
+
+        test.ok(last.o.first === 120, 'right increment');
+        test.ok(last.i.first === 120, 'right increment');
+        test.ok(last.o.total === 360, 'total should be 2 times increment');
+        test.ok(last.i.total === 360, 'total should be 2 times increment');
         test.done();
       });
     }, 5000);
   },
   doStopCheck: function(test) {
     console.log('Stop Check');
-    var increment = 100;
-    var starting = 10000;
-    fs.open = function(x, y, callback) {
-      // dont need to give anything useful back;
-      callback(null, null);
-    };
+    var increment = 60;
+    var starting = 300;
 
-    function StreamMock() {
-      var self = this;
-      self.sb = new streamBuffers.ReadableStreamBuffer({
+    fs.createReadStream = function() {
+      var sm = new streamBuffers.ReadableStreamBuffer({
         frequency: 1,
         chunkSize: 32
       });
-
-      this.createReadStream = function() {
-        starting += increment;
-
-        self.sb.put(starting, 'utf8');
-        return self.sb;
-      };
-    }
-    fds.createFromFd = function() {
-      return new StreamMock();
+      starting += increment;
+      sm.put(starting, 'utf8');
+      return sm;
     };
 
-    test.expect(3);
+    test.expect(2);
     xrate.start();
 
     setTimeout(function() {
-      xrate.stop(function(err, last) {
-        test.ok(!err, 'should not be an error here');
-        test.ok(last.o.first === 200, 'how much bandwidth had passed in this amount of time');
-        test.ok(last.i.first === 200, 'how much bandwidth had passed in this amount of time');
+      xrate.stop(function(last) {
+        test.ok(last.o.first === 120, 'how much bandwidth had passed in this amount of time');
+        test.ok(last.i.first === 120, 'how much bandwidth had passed in this amount of time');
         test.done();
       });
     }, 5000);
@@ -177,10 +143,11 @@ exports.xrate = {
       rcvd: 'statistics/tx_bytes'
     };
     xrate.settings(errorSettings);
+
     xrate.start();
 
     xrate.once('error', function(message) {
-      test.ok(message === 'could not find bandwidth data', 'right error message');
+      test.ok(message.code === 'ENOENT', 'right error message');
       test.done();
     });
   }

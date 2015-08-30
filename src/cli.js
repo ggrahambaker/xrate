@@ -7,36 +7,34 @@
  *
  */
 'use strict';
-var xrate = require('./xrate'),
-  // os = require('os'),
-  // stream = require('stream'),
-  minimist = require('minimist');
+// var xrate = require('./xrate'),
+//   // os = require('os'),
+//   // stream = require('stream'),
+//   minimist = require('minimist');
 
-process.title = 'Xrate';
+// process.title = 'Xrate';
 
-var argv = minimist(process.argv.slice(2), {});
-var command = argv._[0];
-
-if (command === 'start') {
-  runStart();
-}
+// var argv = minimist(process.argv.slice(2), {});
+// var command = argv._[0];
 
 
-function runStart(config) {
-  if (!xrate.state.running) {
-    if (config) {
-      xrate.start();
-    }
-    xrate.start();
-  }
+// runStart();
 
-  xrate.on('init', function() {
-    process.stdout.write('starting up now!');
-  });
+// function runStart(config) {
+//   if (!xrate.state.running) {
+//     if (config) {
+//       xrate.start();
+//     }
+//     xrate.start();
+//   }
 
-  xrate.on('update', function(res) {
-    console.log('res:\n', res);
-  });
-}
+//   xrate.on('init', function() {
+//     process.stdout.write('starting up now!');
+//   });
+
+//   xrate.on('update', function(res) {
+//     console.log('res:\n', res);
+//   });
+// }
 
 
