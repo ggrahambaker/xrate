@@ -1,3 +1,3 @@
 // index.js
 'use strict';
-exports.xrate = require('./src/xrate'),
+module.exports = require('./src/xrate');
