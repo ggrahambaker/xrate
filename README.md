@@ -11,8 +11,6 @@ An api for monitoring incoming and outgoing bandwidth usage for Linux servers. T
 	 - Event: 'update'
 	 
 
-
-
 ##Starting XRate
 
 	$ npm install
@@ -21,18 +19,16 @@ An api for monitoring incoming and outgoing bandwidth usage for Linux servers. T
 
 ##Usage 
 
-
 ###XRate
 This is the constructor for XRate. It will use the default settings if unspecified
 There are optional config settings:
 
 	var config = {
 	    frequency : 1000, // how often statistics are reported
-	    update: false,  // set true to receive updates
+        units: 'B' // B, KB, MB, GB, TB, PB
 	}
 
 	var xrate = new XRate([config])
-
 
 
 ###start

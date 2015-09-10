@@ -35,7 +35,7 @@ function XRate() {
   // default config
   this.config = {
     frequency: 1000,
-    update: true
+    units: 'B'
   };
 
   this.job = null;
@@ -78,12 +78,10 @@ function XRate() {
 
   var beginLogging = function(readFD) {
     self.job = setInterval(function() {
-      if (self.config.update) {
-        self.emit('update', {
-          i: self.oStat.last,
-          o: self.iStat.last
-        });
-      }
+      self.emit('update', {
+        i: self.oStat.last,
+        o: self.iStat.last
+      });
       var inStream = fs.createReadStream('', {fd: readFD.recv, flags: 'r', start: 0, autoClose: false});
       var outStream = fs.createReadStream('', {fd: readFD.send, flags: 'r', start: 0, autoClose: false});
 
@@ -105,12 +103,12 @@ function XRate() {
    * begins the bandwidth recording process
    */
   this.start = function(settings) {
-    self.oStat = stats.createStat();
-    self.iStat = stats.createStat();
-    if (settings) {
-      self.config = settings;
-      console.log(self.config);
-    }
+    self.config.units = settings.units ? settings.units : 'B';
+    self.config.frequency = settings.frequency ? settings.frequency : 1000;
+
+    self.oStat = stats.createStat(self.config.units);
+    self.iStat = stats.createStat(self.config.units);
+
     setUp(function(err, rStreams) {
       if (err) {
         return err;

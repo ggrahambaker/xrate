@@ -8,14 +8,17 @@
  *
  */
 'use strict';
-// var util = require('util');
+
+var converter = require('byte-converter').converterBase2;
+
 /**
  * Stat Object
  */
-var Stat = function() {
+var Stat = function(units) {
   var self = this;
   this.lastReport = 0;
   this.count = 0;
+  this.unit = units;
 
   this.last = {
     first: 0,
@@ -50,12 +53,20 @@ var Stat = function() {
       // set average..
       self.last.average = (self.last.total / self.count).toFixed(2);
     }
+    self.convert();
+  };
+
+  this.convert = function() {
+    for (var index in self.last) {
+      self.last[index] = Number(converter(self.last[index], 'B', self.unit).toFixed(2));
+    }
   };
 };
+
 
 /**
  * outward facing point of contact
  */
-exports.createStat = function() {
-  return new Stat();
+exports.createStat = function(unit) {
+  return new Stat(unit);
 };

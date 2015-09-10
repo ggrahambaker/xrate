@@ -2,7 +2,6 @@
 
 var streamBuffers = require('stream-buffers'),
   fs = require('fs'),
-  util = require('util'),
   xrate = require('../coverage/instrument/src/xrate');
 
 /*
@@ -28,7 +27,10 @@ var streamBuffers = require('stream-buffers'),
 var _createReadStream = fs.createReadStream;
 var _open = fs.open;
 
-
+var config = {
+    frequency: 1000, // how often statistics are reported
+    units: 'B' // B, KB, MB, GB, TB, PB
+};
 // var increment = 0,
 //   starting = 0;
 
@@ -63,7 +65,7 @@ exports.xrate = {
     };
 
     test.expect(4);
-    xrate.start();
+    xrate.start(config);
 
     setTimeout(function() {
       xrate.update(function(report) {
@@ -91,13 +93,11 @@ exports.xrate = {
     };
 
     test.expect(4);
-    xrate.start();
+    xrate.start(config);
     setTimeout(function() {
       xrate.once('update', function(last) {
-        console.log('update : ' + util.inspect(last));
         // should be the same as before,
         // just trying a different way of getting it
-
         test.ok(last.o.first === 120, 'right increment');
         test.ok(last.i.first === 120, 'right increment');
         test.ok(last.o.total === 360, 'total should be 2 times increment');
@@ -122,7 +122,7 @@ exports.xrate = {
     };
 
     test.expect(2);
-    xrate.start();
+    xrate.start(config);
 
     setTimeout(function() {
       xrate.stop(function(last) {
@@ -144,7 +144,7 @@ exports.xrate = {
     };
     xrate.settings(errorSettings);
 
-    xrate.start();
+    xrate.start(config);
 
     xrate.once('error', function(message) {
       test.ok(message.code === 'ENOENT', 'right error message');
